@@ -63,7 +63,20 @@ class WebExtensionPortManager(private val extension: WebExtension) {
     /**
      * Send a message through the port
      */
-    fun postMessage(message: Any): Boolean {
+    fun postMessage(message: JSONObject): Boolean {
+        return try {
+            port?.postMessage(message)
+            true
+        } catch (e: Exception) {
+            Log.e("WebExtensionPortManager", "Error posting message: ${e.message}")
+            false
+        }
+    }
+    
+    /**
+     * Send a string message through the port
+     */
+    fun postStringMessage(message: String): Boolean {
         return try {
             port?.postMessage(message)
             true
@@ -242,7 +255,6 @@ class AdblockModel : ActiveModel() {
                 val enabledLists = getFilterLists().filter { it.enabled }
                 
                 // Send message to uBlock extension to update filters
-                val port = uBlockPortManager?.getOrCreatePort("background")
                 val message = JSONObject().apply {
                     put("action", "updateFilters")
                     
@@ -258,7 +270,7 @@ class AdblockModel : ActiveModel() {
                     put("lists", listsArray)
                 }
                 
-                port?.postMessage(message)
+                uBlockPortManager?.postMessage(message)
                 Log.d(TAG, "Sent updateFilters message to uBlock with ${enabledLists.size} lists")
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating uBlock filters", e)
@@ -295,11 +307,10 @@ class AdblockModel : ActiveModel() {
         if (config.isWebEngineGecko() && uBlockExtension != null) {
             try {
                 // Send message to uBlock extension to toggle enabled state
-                val port = uBlockPortManager?.getOrCreatePort("background")
                 val message = JSONObject().apply {
                     put("action", "toggleEnabled")
                 }
-                port?.postMessage(message)
+                uBlockPortManager?.postMessage(message)
                 Log.d(TAG, "Sent toggleEnabled message to uBlock")
             } catch (e: Exception) {
                 Log.e(TAG, "Error toggling uBlock", e)
