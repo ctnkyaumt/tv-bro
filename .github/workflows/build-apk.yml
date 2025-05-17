@@ -35,10 +35,14 @@ jobs:
         run: chmod +x gradlew
         
       - name: Build APK
-        run: ./gradlew assemble${{ inputs.buildType }}
-        
+        run: |
+          ./gradlew assemble${{ inputs.buildType }} \
+            -Pandroid.injected.buildOnlyTargetAbi=arm64-v8a,armeabi-v7a
+            
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
           name: app-${{ inputs.buildType }}-apk
-          path: app/build/outputs/apk/${{ inputs.buildType }}/*.apk
+          path: |
+            app/build/outputs/apk/${{ inputs.buildType }}/app-${{ inputs.buildType }}-arm64-v8a.apk
+            app/build/outputs/apk/${{ inputs.buildType }}/app-${{ inputs.buildType }}-armeabi-v7a.apk
