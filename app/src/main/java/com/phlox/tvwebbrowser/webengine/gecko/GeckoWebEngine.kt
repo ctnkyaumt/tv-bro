@@ -62,6 +62,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine {
                     .build())
                 runtime = GeckoRuntime.create(context, builder.build())
 
+                // Install the generic extension
                 val webExtInstallResult = if (APP_WEB_EXTENSION_VERSION == TVBro.config.appWebExtensionVersion) {
                     Log.d(TAG, "appWebExtension already installed")
                     runtime.webExtensionController.ensureBuiltIn(
@@ -79,6 +80,18 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine {
                     TVBro.config.appWebExtensionVersion = APP_WEB_EXTENSION_VERSION
                 }
                 ) { e -> Log.e(TAG, "Error registering WebExtension", e) }
+                
+                // Install the uBlock extension
+                val uBlockExtInstallResult = runtime.webExtensionController.ensureBuiltIn(
+                    "resource://android/assets/extensions/ublock/",
+                    "ublock@tv-bro.com"
+                )
+                
+                uBlockExtInstallResult.accept({ extension ->
+                    Log.d(TAG, "uBlock extension accepted: ${extension?.metaData?.description}")
+                }, { e -> 
+                    Log.e(TAG, "Error registering uBlock extension", e)
+                })
             }
 
             val webView = GeckoViewWithVirtualCursor(context)

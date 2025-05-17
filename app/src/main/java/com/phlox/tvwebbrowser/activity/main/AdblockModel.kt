@@ -18,17 +18,59 @@ import org.json.JSONObject
 import org.mozilla.geckoview.WebExtension
 import java.util.*
 
-// Extension function to get the message port from a WebExtension
-fun WebExtension.getMessageDelegate(): WebExtension.Port? {
-    return try {
-        val port = this.ports.get("background")
+/**
+ * Helper class to manage WebExtension port connections
+ */
+class WebExtensionPortManager(private val extension: WebExtension) {
+    private var port: WebExtension.Port? = null
+    private var portDelegate: WebExtension.PortDelegate? = null
+    
+    /**
+     * Get or create a port connection to the background script
+     */
+    fun getOrCreatePort(name: String = "background"): WebExtension.Port? {
         if (port == null) {
-            this.connectNative("background")
-        } else {
-            port
+            try {
+                // Set up a message delegate to receive the port connection
+                val messageDelegate = object : WebExtension.MessageDelegate {
+                    override fun onConnect(port: WebExtension.Port) {
+                        this@WebExtensionPortManager.port = port
+                        portDelegate?.let { port.setDelegate(it) }
+                    }
+                }
+                
+                // Register the message delegate with the extension
+                extension.setMessageDelegate(messageDelegate, name)
+                
+                // This will trigger onConnect in our delegate
+                return port
+            } catch (e: Exception) {
+                Log.e("WebExtensionPortManager", "Error connecting to port: ${e.message}")
+                return null
+            }
         }
-    } catch (e: Exception) {
-        null
+        return port
+    }
+    
+    /**
+     * Set a delegate to handle port messages
+     */
+    fun setPortDelegate(delegate: WebExtension.PortDelegate) {
+        portDelegate = delegate
+        port?.setDelegate(delegate)
+    }
+    
+    /**
+     * Send a message through the port
+     */
+    fun postMessage(message: Any): Boolean {
+        return try {
+            port?.postMessage(message)
+            true
+        } catch (e: Exception) {
+            Log.e("WebExtensionPortManager", "Error posting message: ${e.message}")
+            false
+        }
     }
 }
 
@@ -43,6 +85,7 @@ class AdblockModel : ActiveModel() {
     val clientLoading = ObservableValue(false)
     val config = TVBro.config
     private var uBlockExtension: WebExtension? = null
+    private var uBlockPortManager: WebExtensionPortManager? = null
     private var isUBlockEnabled = true
     private val prefs: SharedPreferences by lazy {
         TVBro.instance.getSharedPreferences(PREFS_FILTER_LISTS, Context.MODE_PRIVATE)
@@ -99,6 +142,7 @@ class AdblockModel : ActiveModel() {
                 if (extension?.metaData?.description?.contains("uBlock") == true) {
                     Log.d(TAG, "uBlock extension loaded")
                     uBlockExtension = extension
+                    uBlockPortManager = WebExtensionPortManager(extension)
                     updateFilters()
                 }
             })
@@ -198,7 +242,7 @@ class AdblockModel : ActiveModel() {
                 val enabledLists = getFilterLists().filter { it.enabled }
                 
                 // Send message to uBlock extension to update filters
-                val port = uBlockExtension?.getMessageDelegate()
+                val port = uBlockPortManager?.getOrCreatePort("background")
                 val message = JSONObject().apply {
                     put("action", "updateFilters")
                     
@@ -251,7 +295,7 @@ class AdblockModel : ActiveModel() {
         if (config.isWebEngineGecko() && uBlockExtension != null) {
             try {
                 // Send message to uBlock extension to toggle enabled state
-                val port = uBlockExtension?.getMessageDelegate()
+                val port = uBlockPortManager?.getOrCreatePort("background")
                 val message = JSONObject().apply {
                     put("action", "toggleEnabled")
                 }
