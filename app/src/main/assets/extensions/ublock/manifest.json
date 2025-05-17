@@ -1,0 +1,38 @@
+{
+  "manifest_version": 2,
+  "name": "uBlock Origin",
+  "version": "1.51.0",
+  "description": "uBlock Origin - An efficient blocker for TV Bro",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ublock@tv-bro.com"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*/*"
+      ],
+      "js": [
+        "js/contentscript.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "background": {
+    "scripts": [
+      "js/background.js"
+    ],
+    "persistent": true
+  },
+  "permissions": [
+    "nativeMessaging",
+    "nativeMessagingFromContent",
+    "geckoViewAddons",
+    "tabs",
+    "webRequest",
+    "webRequestBlocking",
+    "storage",
+    "<all_urls>"
+  ]
+}

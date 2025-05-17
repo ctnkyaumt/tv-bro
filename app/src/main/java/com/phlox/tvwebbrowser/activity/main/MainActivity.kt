@@ -133,6 +133,11 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         vb.vTabs.listener = tabsListener
 
         vb.ibAdBlock.setOnClickListener { toggleAdBlockForTab() }
+        vb.ibAdBlock.setOnLongClickListener {
+            // Show the adblock filter settings dialog
+            showAdblockFilterSettings()
+            true
+        }
         vb.ibPopupBlock.setOnClickListener { lifecycleScope.launch(Dispatchers.Main) { showPopupBlockOptions() } }
         vb.ibHome.setOnClickListener { navigate(settingsModel.homePage) }
         vb.ibBack.setOnClickListener { navigateBack() }
@@ -701,9 +706,30 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             val newState = !currentState
             adblock = newState
             webEngine.onUpdateAdblockSetting(newState)
+            // Toggle the uBlock extension state
+            adblockModel.toggleAdBlockEnabled()
             onWebViewUpdated(this)
             refresh()
         }
+    }
+    
+    /**
+     * Show the adblock filter settings dialog
+     */
+    private fun showAdblockFilterSettings() {
+        // Import the dialog class to avoid conflicts
+        val dialogClass = com.phlox.tvwebbrowser.activity.main.dialogs.adblock.AdblockFiltersDialog::class.java
+        
+        // Show the dialog
+        dialogClass.getMethod("show", Context::class.java, Function0::class.java)
+            .invoke(null, this, object : Function0<Unit> {
+                override fun invoke() {
+                    // Refresh the current tab when filters are updated
+                    tabsModel.currentTab.value?.apply {
+                        refresh()
+                    }
+                }
+            })
     }
 
     private suspend fun showPopupBlockOptions() {
