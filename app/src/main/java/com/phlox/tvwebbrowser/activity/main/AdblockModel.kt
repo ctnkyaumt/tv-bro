@@ -20,7 +20,16 @@ import java.util.*
 
 // Extension function to get the message port from a WebExtension
 fun WebExtension.getMessageDelegate(): WebExtension.Port? {
-    return getMessagePort("background")
+    return try {
+        val port = this.ports.get("background")
+        if (port == null) {
+            this.connectNative("background")
+        } else {
+            port
+        }
+    } catch (e: Exception) {
+        null
+    }
 }
 
 class AdblockModel : ActiveModel() {
