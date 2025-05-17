@@ -199,6 +199,9 @@
     <string name="filter_settings">Filter Settings</string>
     <string name="apply">Apply</string>
     <string name="cancel">Cancel</string>
+    <string name="back_history">Back History</string>
+    <string name="forward_history">Forward History</string>
+    <string name="long_press_for_history">Long press for history</string>
     <string name="update_filters">Update Filters</string>
     <string name="filter_last_updated">Last updated: %s</string>
     <string name="filter_update_now">Update Now</string>

@@ -141,11 +141,19 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         vb.ibPopupBlock.setOnClickListener { lifecycleScope.launch(Dispatchers.Main) { showPopupBlockOptions() } }
         vb.ibHome.setOnClickListener { navigate(settingsModel.homePage) }
         vb.ibBack.setOnClickListener { navigateBack() }
+        vb.ibBack.setOnLongClickListener { 
+            showNavigationHistory(false)
+            true
+        }
         vb.ibForward.setOnClickListener {
             val tab = tabsModel.currentTab.value ?: return@setOnClickListener
             if (tab.webEngine.canGoForward()) {
                 tab.webEngine.goForward()
             }
+        }
+        vb.ibForward.setOnLongClickListener {
+            showNavigationHistory(true)
+            true
         }
         vb.ibRefresh.setOnClickListener { refresh() }
         vb.ibCloseTab.setOnClickListener { tabsModel.currentTab.value?.apply { closeTab(this) } }
@@ -1488,5 +1496,52 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         override fun onServiceDisconnected(p0: ComponentName?) {
             downloadService = null
         }
+    }
+
+    /**
+     * Shows a dialog with navigation history (back or forward)
+     * @param isForwardHistory true to show forward history, false to show back history
+     */
+    private fun showNavigationHistory(isForwardHistory: Boolean) {
+        val currentTab = tabsModel.currentTab.value ?: return
+        val webView = currentTab.webEngine.getView() as? android.webkit.WebView ?: return
+        
+        // Get the WebBackForwardList from the WebView
+        val historyList = webView.copyBackForwardList()
+        if (historyList.size <= 1) return
+        
+        val currentIndex = historyList.currentIndex
+        
+        // Check if there's history in the requested direction
+        if (isForwardHistory && currentIndex >= historyList.size - 1) return
+        if (!isForwardHistory && currentIndex <= 0) return
+        
+        // Show the dialog with history items
+        com.phlox.tvwebbrowser.activity.main.dialogs.history.NavigationHistoryDialog(
+            this,
+            historyList,
+            isForwardHistory,
+            currentIndex
+        ) { historyItem ->
+            // Navigate to the selected history item
+            val itemIndex = historyList.getItemAtIndex(historyList.currentIndex)
+                ?.let { historyList.getIndexOf(it) } ?: -1
+            val selectedIndex = historyList.getIndexOf(historyItem)
+            
+            if (selectedIndex != -1 && itemIndex != -1) {
+                val steps = selectedIndex - itemIndex
+                if (steps > 0) {
+                    // Forward navigation
+                    for (i in 0 until steps) {
+                        currentTab.webEngine.goForward()
+                    }
+                } else if (steps < 0) {
+                    // Back navigation
+                    for (i in 0 until -steps) {
+                        currentTab.webEngine.goBack()
+                    }
+                }
+            }
+        }.show()
     }
 }
