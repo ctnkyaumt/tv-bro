@@ -19,10 +19,6 @@ import android.view.animation.AccelerateInterpolator
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.animation.DecelerateInterpolator
-
-// Extension function to get the index of an item in a list
-fun <T> List<T>.getIndexOf(item: T): Int = indexOf(item)
-
 import android.webkit.*
 import android.widget.FrameLayout
 import android.widget.PopupMenu
@@ -67,6 +63,8 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.system.exitProcess
 
+// Extension function to get the index of an item in a list
+fun <T> List<T>.getIndexOf(item: T): Int = indexOf(item)
 
 open class MainActivity : AppCompatActivity(), ActionBar.Callback {
     companion object {
