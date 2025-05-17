@@ -63,8 +63,18 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.system.exitProcess
 
-// Extension function to get the index of an item in a list
-fun <T> List<T>.getIndexOf(item: T): Int = indexOf(item)
+// Extension function to get the index of a WebHistoryItem in a WebBackForwardList
+import android.webkit.WebBackForwardList
+import android.webkit.WebHistoryItem
+
+fun WebBackForwardList.getIndexOf(item: WebHistoryItem): Int {
+    for (i in 0 until this.size) {
+        if (this.getItemAtIndex(i) == item) {
+            return i
+        }
+    }
+    return -1
+}
 
 open class MainActivity : AppCompatActivity(), ActionBar.Callback {
     companion object {

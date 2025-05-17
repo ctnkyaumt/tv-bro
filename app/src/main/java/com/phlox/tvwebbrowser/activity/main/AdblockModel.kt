@@ -18,9 +18,9 @@ import org.json.JSONObject
 import org.mozilla.geckoview.WebExtension
 import java.util.*
 
-// Extension function to get the message delegate from a WebExtension
-fun WebExtension.getMessageDelegate(): WebExtension.MessageDelegate? {
-    return getMessageDelegate(null)
+// Extension function to get the message port from a WebExtension
+fun WebExtension.getMessageDelegate(): WebExtension.Port? {
+    return getMessagePort("background")
 }
 
 class AdblockModel : ActiveModel() {
@@ -205,7 +205,7 @@ class AdblockModel : ActiveModel() {
                     put("lists", listsArray)
                 }
                 
-                port?.onMessage(message, null)
+                port?.postMessage(message)
                 Log.d(TAG, "Sent updateFilters message to uBlock with ${enabledLists.size} lists")
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating uBlock filters", e)
@@ -246,7 +246,7 @@ class AdblockModel : ActiveModel() {
                 val message = JSONObject().apply {
                     put("action", "toggleEnabled")
                 }
-                port?.onMessage(message, null)
+                port?.postMessage(message)
                 Log.d(TAG, "Sent toggleEnabled message to uBlock")
             } catch (e: Exception) {
                 Log.e(TAG, "Error toggling uBlock", e)
