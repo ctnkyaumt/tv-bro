@@ -19,6 +19,10 @@ import android.view.animation.AccelerateInterpolator
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.view.animation.DecelerateInterpolator
+
+// Extension function to get the index of an item in a list
+fun <T> List<T>.getIndexOf(item: T): Int = indexOf(item)
+
 import android.webkit.*
 import android.widget.FrameLayout
 import android.widget.PopupMenu

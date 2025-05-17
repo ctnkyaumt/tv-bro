@@ -18,6 +18,11 @@ import org.json.JSONObject
 import org.mozilla.geckoview.WebExtension
 import java.util.*
 
+// Extension function to get the message delegate from a WebExtension
+fun WebExtension.getMessageDelegate(): WebExtension.MessageDelegate? {
+    return getMessageDelegate(null)
+}
+
 class AdblockModel : ActiveModel() {
     companion object {
         val TAG: String = AdblockModel::class.java.simpleName
@@ -81,13 +86,13 @@ class AdblockModel : ActiveModel() {
 
     private fun observeUBlockExtension() {
         if (config.isWebEngineGecko()) {
-            GeckoWebEngine.appWebExtension.subscribe { extension ->
+            GeckoWebEngine.appWebExtension.subscribe(observer = { extension ->
                 if (extension?.metaData?.description?.contains("uBlock") == true) {
                     Log.d(TAG, "uBlock extension loaded")
                     uBlockExtension = extension
                     updateFilters()
                 }
-            }
+            })
         }
     }
 
