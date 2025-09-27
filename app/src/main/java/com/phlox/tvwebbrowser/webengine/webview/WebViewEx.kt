@@ -486,10 +486,9 @@ class WebViewEx(context: Context, val callback: Callback, val jsInterface: Andro
 
                     }
                     Config.HomePageMode.HOME_PAGE -> {
-                        currentOriginalUrl = Uri.parse(Config.HOME_PAGE_URL)
-                        super.loadUrl(Config.HOME_PAGE_URL)
-                        //val data = context.assets.open("pages/home/index.html").bufferedReader().use { it.readText() }
-                        //loadDataWithBaseURL(Config.HOME_PAGE_URL, data, "text/html", "UTF-8", null)
+                        // Do not load remote home page URL. Show blank and let MainActivity render native HomePageView overlay.
+                        currentOriginalUrl = Uri.parse("about:blank")
+                        loadDataWithBaseURL(null, "", "text/html", "UTF-8", null)
                     }
                 }
 

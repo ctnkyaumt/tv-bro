@@ -229,18 +229,15 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine {
                     session.loadUri(TVBro.config.homePage)
                 }
                 Config.HomePageMode.HOME_PAGE -> {
-                    //if (HomePageHelper.homePageFilesReady) {
-                        session.loadUri(Config.HOME_PAGE_URL/*HomePageHelper.HOME_PAGE_URL*/)
-                    //} else {
-                    //    Toast.makeText(TVBro.instance, R.string.error, Toast.LENGTH_SHORT).show()
-                    //}
+                    // Do not load remote home page URL. Use blank so Activity can render native HomePageView overlay.
+                    session.loadUri("about:blank")
                 }
             }
         } else {
             session.loadUri(url)
         }
     }
-
+{{ ... }}
     override fun canGoForward(): Boolean {
         return navigationDelegate.canGoForward
     }

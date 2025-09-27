@@ -56,6 +56,13 @@
         android:scaleType="fitXY"
         tools:ignore="ContentDescription" />
 
+    <com.phlox.tvwebbrowser.activity.main.view.HomePageView
+        android:id="@+id/vHomePage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        />
+
     <LinearLayout
         android:id="@+id/llMiniaturePlaceholder"
         android:orientation="horizontal"

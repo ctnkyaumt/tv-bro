@@ -42,6 +42,7 @@
     <string name="file_not_found">File not found</string>
     <string name="no_app_for_file_type">No applications found to open this file type</string>
     <string name="delete">Delete</string>
+    <string name="move">Move</string>
     <string name="cancel">Cancel</string>
     <string name="msg_delete_history">Delete selected history items?</string>
     <string name="msg_delete_history_all">Delete all history items?</string>

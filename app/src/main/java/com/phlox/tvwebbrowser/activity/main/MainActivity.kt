@@ -51,6 +51,7 @@ import com.phlox.tvwebbrowser.webengine.WebEngine
 import com.phlox.tvwebbrowser.webengine.WebEngineFactory
 import com.phlox.tvwebbrowser.webengine.WebEngineWindowProviderCallback
 import com.phlox.tvwebbrowser.webengine.gecko.GeckoWebEngine
+import com.phlox.tvwebbrowser.webengine.gecko.GeckoViewWithVirtualCursor
 import com.phlox.tvwebbrowser.widgets.NotificationView
 import kotlinx.coroutines.*
 import java.io.File
@@ -211,12 +212,52 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             }
         }
 
+        // Home page overlay wiring
+        vb.vHomePage.setCallback(object : com.phlox.tvwebbrowser.activity.main.view.HomePageView.Callback {
+            override fun onNavigate(url: String) { navigate(url) }
+            override fun onAddNew() {
+                val item = FavoriteItem().apply {
+                    title = ""
+                    url = ""
+                    homePageBookmark = true
+                    order = viewModel.homePageLinks.size
+                }
+                FavoriteEditorDialog(this@MainActivity, object : FavoriteEditorDialog.Callback {
+                    override fun onDone(item: FavoriteItem) {
+                        lifecycleScope.launch { viewModel.onHomePageLinkEdited(item) }
+                    }
+                }, item).show()
+            }
+            override fun onEdit(link: HomePageLink) {
+                lifecycleScope.launch(Dispatchers.Main) {
+                    val existing = withContext(Dispatchers.IO) {
+                        AppDatabase.db.favoritesDao().getById(link.favoriteId ?: 0L)
+                    }
+                    val item = existing ?: FavoriteItem().apply {
+                        title = link.title
+                        url = link.url
+                        homePageBookmark = true
+                        order = viewModel.homePageLinks.indexOfFirst { it.favoriteId == link.favoriteId }
+                    }
+                    FavoriteEditorDialog(this@MainActivity, object : FavoriteEditorDialog.Callback {
+                        override fun onDone(item: FavoriteItem) {
+                            lifecycleScope.launch { viewModel.onHomePageLinkEdited(item) }
+                        }
+                    }, item).show()
+                }
+            }
+            override fun onDelete(link: HomePageLink) {
+                lifecycleScope.launch { viewModel.removeHomePageLink(link) }
+            }
+            override fun onReorder(newOrder: List<HomePageLink>) {
+                lifecycleScope.launch { viewModel.reorderHomePageLinks(newOrder) }
+            }
+        })
+
         viewModel.homePageLinks.subscribe(this) {
             Log.i(TAG, "homePageLinks updated")
-            val currentUrl = tabsModel.currentTab.value?.url ?: return@subscribe
-            if (Config.HOME_PAGE_URL == currentUrl) {
-                tabsModel.currentTab.value?.webEngine?.reload()
-            }
+            vb.vHomePage.setData(it)
+            updateHomeOverlay()
         }
 
         tabsModel.currentTab.subscribe(this) {
@@ -224,6 +265,7 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
             it?.let {
                 onWebViewUpdated(it)
             }
+            updateHomeOverlay()
         }
 
         tabsModel.tabsStates.subscribe(this, false) {
@@ -235,6 +277,37 @@ open class MainActivity : AppCompatActivity(), ActionBar.Callback {
         }
 
         loadState()
+    }
+
+    private fun isOnNativeHomePage(): Boolean {
+        val tab = tabsModel.currentTab.value ?: return false
+        if (settingsModel.homePageMode != Config.HomePageMode.HOME_PAGE) return false
+        val url = tab.url ?: ""
+        return url == Config.HOME_URL_ALIAS || url == "about:blank" || url.isEmpty()
+    }
+
+    private fun updateHomeOverlay() {
+        val show = isOnNativeHomePage()
+        vb.vHomePage.visibility = if (show) View.VISIBLE else View.GONE
+        if (show) {
+            // Ensure data is bound
+            vb.vHomePage.setData(viewModel.homePageLinks)
+            // Disable pointer cursor over web content
+            vb.flWebViewContainer.setWillNotDraw(true)
+            val webView = tabsModel.currentTab.value?.webEngine?.getView()
+            if (webView is GeckoViewWithVirtualCursor) {
+                webView.setWillNotDraw(true)
+            }
+            // Focus homepage grid for DPAD navigation
+            vb.vHomePage.requestFocus()
+        } else {
+            // Re-enable pointer for non-home pages
+            vb.flWebViewContainer.setWillNotDraw(false)
+            val webView = tabsModel.currentTab.value?.webEngine?.getView()
+            if (webView is GeckoViewWithVirtualCursor) {
+                webView.setWillNotDraw(false)
+            }
+        }
     }
 
     private var progressBarHideRunnable: Runnable = Runnable {
