@@ -42,11 +42,11 @@ jobs:
       run: chmod +x ./gradlew
       
     - name: Build APK for ${{ matrix.flavor }} (ARMv7 only)
-      run: ./gradlew assemble${{ matrix.flavor }}Release -Pandroid.injected.build.only.abi=armeabi-v7a
+      run: ./gradlew assemble${{ matrix.flavor }}Debug -Pandroid.injected.build.only.abi=armeabi-v7a
       
     - name: Upload ARMv7 APK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: tvbro-${{ matrix.flavor }}-armv7-apk
-        path: app/build/outputs/apk/${{ matrix.flavor }}/release/*armeabi-v7a*.apk
+        name: tvbro-${{ matrix.flavor }}-armv7-debug-apk
+        path: app/build/outputs/apk/${{ matrix.flavor }}/debug/*armeabi-v7a*.apk
         retention-days: 30
