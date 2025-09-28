@@ -31,7 +31,7 @@ class HomePageView @JvmOverloads constructor(
     }
 
     private val recycler: RecyclerView
-    private var adapter: CardsAdapter
+    private lateinit var adapter: CardsAdapter
     private var callback: Callback? = null
 
     private var moveMode = false

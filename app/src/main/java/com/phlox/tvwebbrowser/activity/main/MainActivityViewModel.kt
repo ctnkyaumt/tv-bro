@@ -101,6 +101,7 @@ class MainActivityViewModel: ActiveModel() {
                 }
             }
         }
+    }
 
     fun logVisitedHistory(title: String?, url: String, faviconHash: String?) {
         Log.d(TAG, "logVisitedHistory: $url")
@@ -269,3 +270,14 @@ class MainActivityViewModel: ActiveModel() {
             }
         }
     }
+
+    fun markBookmarkRecommendationAsUseful(bookmarkOrder: Int) = modelScope.launch {
+        // Mark bookmark as useful based on order
+        val bookmark = homePageLinks.getOrNull(bookmarkOrder)
+        bookmark?.favoriteId?.let { id ->
+            withContext(Dispatchers.IO) {
+                AppDatabase.db.favoritesDao().markAsUseful(id)
+            }
+        }
+    }
+}
