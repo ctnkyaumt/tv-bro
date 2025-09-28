@@ -13,7 +13,7 @@ jobs:
     
     strategy:
       matrix:
-        flavor: [generic, google, foss]
+        flavor: [generic]
     
     steps:
     - name: Checkout code
