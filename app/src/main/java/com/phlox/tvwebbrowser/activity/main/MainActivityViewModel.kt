@@ -269,4 +269,3 @@ class MainActivityViewModel: ActiveModel() {
             }
         }
     }
-}

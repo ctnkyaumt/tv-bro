@@ -237,7 +237,7 @@ class GeckoWebEngine(val tab: WebTabState): WebEngine {
             session.loadUri(url)
         }
     }
-{{ ... }}
+
     override fun canGoForward(): Boolean {
         return navigationDelegate.canGoForward
     }
